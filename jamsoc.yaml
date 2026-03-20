@@ -1,0 +1,180 @@
+name: jamsoc
+
+width_addr: &width_addr 32
+width_data: &width_data 32
+
+top_ports:
+  inputs:
+    clk: 1
+    resetn: 1
+    uart_rx: 1
+  outputs:
+    uart_tx: 1
+    dbg_fetch_cyc: 1
+    dbg_lsu_cyc: 1
+  inouts:
+    gpio: 32
+    i2c_scl: 1
+    i2c_sda: 1
+
+assignments:
+  dbg_fetch_cyc: fetch_cyc
+  dbg_lsu_cyc: lsu_cyc
+
+modules:
+#  cpu0:
+#    module: picorv32_wb
+#    master: true
+#    params:
+#      COMPRESSED_ISA: 1
+#      ENABLE_MUL: 1
+#      ENABLE_DIV: 1
+#      STACKADDR: 32'h0000_1ff0
+  vex_lsu:
+    module: wb_vex_lsu
+    master: true
+    params:
+      WIDTH_ADDR: *width_addr
+      WIDTH_DATA: *width_data
+    ports:
+      lsu_cyc:
+        wire: lsu_cyc
+      lsu_stb:
+        wire: lsu_stb
+      lsu_ack:
+        wire: lsu_ack
+      lsu_we:
+        wire: lsu_we
+      lsu_adr:
+        wire: lsu_adr
+      lsu_miso:
+        wire: lsu_miso
+      lsu_mosi:
+        wire: lsu_mosi
+      lsu_sel:
+        wire: lsu_sel
+  vex_fetch:
+    module: wb_vex_fetch
+    master: true
+    params:
+      WIDTH_ADDR: *width_addr
+      WIDTH_DATA: *width_data
+    ports:
+      fetch_cyc:
+        wire: fetch_cyc
+      fetch_stb:
+        wire: fetch_stb
+      fetch_ack:
+        wire: fetch_ack
+      fetch_we:
+        wire: fetch_we
+      fetch_adr:
+        wire: fetch_adr
+      fetch_miso:
+        wire: fetch_miso
+      fetch_mosi:
+        wire: fetch_mosi
+      fetch_sel:
+        wire: fetch_sel
+  bram0:
+    module: wb_bram
+    address: 0x00000000
+    words: 2048
+  gpio0:
+    module: wb_gpio
+    address: 0x10000000
+    words: 2
+    ports:
+      gpio:
+        wire: gpio
+        width: 32
+  uart0:
+    module: wb_simpleuart
+    address: 0x10001000
+    words: 2
+    ports:
+      uart_rx:
+        wire: uart_rx
+      uart_tx:
+        wire: uart_tx
+  i2c0:
+    module: wb_i2c_master
+    address: 0x10002000
+    words: 2
+    ports:
+      scl:
+        wire: i2c_scl
+      sda:
+        wire: i2c_sda
+  timer_us:
+    module: wb_timer_us
+    address: 0x10003000
+
+  cpu0:
+    module: VexiiRiscv
+    bus: false
+    ports:
+      clk:
+        wire: wb_clk
+      reset:
+        wire: wb_rst
+      PrivilegedPlugin_logic_rdtime:
+        constant: 64'b0 # TODO
+      PrivilegedPlugin_logic_harts_0_int_m_timer:
+        constant: 1'b0
+      PrivilegedPlugin_logic_harts_0_int_m_software:
+        constant: 1'b0
+      PrivilegedPlugin_logic_harts_0_int_m_external:
+        constant: 1'b0
+      LsuCachelessWishbonePlugin_logic_bridge_down_CYC:
+        wire: lsu_cyc
+      LsuCachelessWishbonePlugin_logic_bridge_down_STB:
+        wire: lsu_stb
+      LsuCachelessWishbonePlugin_logic_bridge_down_ACK:
+        wire: lsu_ack
+      LsuCachelessWishbonePlugin_logic_bridge_down_WE:
+        wire: lsu_we
+      LsuCachelessWishbonePlugin_logic_bridge_down_ADR:
+        wire: lsu_adr
+        width: *width_addr
+      LsuCachelessWishbonePlugin_logic_bridge_down_DAT_MISO:
+        wire: lsu_miso
+        width: *width_data
+      LsuCachelessWishbonePlugin_logic_bridge_down_DAT_MOSI:
+        wire: lsu_mosi
+        width: *width_data
+      LsuCachelessWishbonePlugin_logic_bridge_down_SEL:
+        wire: lsu_sel
+        width: 4
+      FetchCachelessWishbonePlugin_logic_bridge_bus_CYC:
+        wire: fetch_cyc
+      FetchCachelessWishbonePlugin_logic_bridge_bus_STB:
+        wire: fetch_stb
+      FetchCachelessWishbonePlugin_logic_bridge_bus_ACK:
+        wire: fetch_ack
+      FetchCachelessWishbonePlugin_logic_bridge_bus_WE:
+        wire: fetch_we
+      FetchCachelessWishbonePlugin_logic_bridge_bus_ADR:
+        wire: fetch_adr
+        width: *width_addr
+      FetchCachelessWishbonePlugin_logic_bridge_bus_DAT_MISO:
+        wire: fetch_miso
+        width: *width_data
+      FetchCachelessWishbonePlugin_logic_bridge_bus_DAT_MOSI:
+        wire: fetch_mosi
+        width: *width_data
+      FetchCachelessWishbonePlugin_logic_bridge_bus_SEL:
+        wire: fetch_sel
+        width: 4
+  wb_syscon:
+    module: wb_syscon
+    bus: false
+    ports:
+      clk:
+        wire: clk
+      resetn:
+        wire: resetn
+      wb_clk_o:
+        wire: wb_clk
+      wb_rst_o:
+        wire: wb_rst

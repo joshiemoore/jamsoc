@@ -1,0 +1,1 @@
+#define CLOCK_HZ 50000000
