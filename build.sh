@@ -18,6 +18,7 @@ mkdir -p $BUILD_DIR
 
 # TODO firmware makefile
 riscv32-unknown-elf-as $ASMFLAGS firmware/start.s -o $BUILD_DIR/start.o
+riscv32-unknown-elf-as $ASMFLAGS firmware/timer.s -o $BUILD_DIR/timer_s.o
 
 riscv32-unknown-elf-gcc -c $CFLAGS firmware/firmware.c -o $BUILD_DIR/firmware.o
 riscv32-unknown-elf-gcc -c $CFLAGS firmware/uart.c -o $BUILD_DIR/uart.o

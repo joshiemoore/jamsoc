@@ -36,6 +36,7 @@ module jamsoc_top (
   wire [3:0] fetch_sel;
   wire wb_clk;
   wire wb_rst;
+  wire [63:0] time_us;
 
   wire [31:0] vex_lsu_adr_o;
   wire [31:0] vex_lsu_dat_o;
@@ -90,15 +91,6 @@ module jamsoc_top (
   wire i2c0_stb_i;
   wire i2c0_cyc_i;
   wire i2c0_ack_o;
-
-  wire [31:0] timer_us_adr_i;
-  wire [31:0] timer_us_dat_i;
-  wire [31:0] timer_us_dat_o;
-  wire [3:0] timer_us_sel_i;
-  wire timer_us_we_i;
-  wire timer_us_stb_i;
-  wire timer_us_cyc_i;
-  wire timer_us_ack_o;
 
   assign dbg_fetch_cyc = fetch_cyc;
   assign dbg_lsu_cyc = lsu_cyc;
@@ -159,16 +151,7 @@ module jamsoc_top (
     .wbs_i2c0_we_o (i2c0_we_i),
     .wbs_i2c0_stb_o (i2c0_stb_i),
     .wbs_i2c0_cyc_o (i2c0_cyc_i),
-    .wbs_i2c0_ack_i (i2c0_ack_o),
-
-    .wbs_timer_us_adr_o (timer_us_adr_i),
-    .wbs_timer_us_dat_o (timer_us_dat_i),
-    .wbs_timer_us_dat_i (timer_us_dat_o),
-    .wbs_timer_us_sel_o (timer_us_sel_i),
-    .wbs_timer_us_we_o (timer_us_we_i),
-    .wbs_timer_us_stb_o (timer_us_stb_i),
-    .wbs_timer_us_cyc_o (timer_us_cyc_i),
-    .wbs_timer_us_ack_i (timer_us_ack_o)
+    .wbs_i2c0_ack_i (i2c0_ack_o)
   );
 
   wb_vex_lsu #(
@@ -276,23 +259,10 @@ module jamsoc_top (
     .sda (i2c_sda)
   );
 
-  wb_timer_us  timer_us (
-    .wb_rst_i (wb_rst),
-    .wb_clk_i (wb_clk),
-    .wbs_adr_i (timer_us_adr_i),
-    .wbs_dat_i (timer_us_dat_i),
-    .wbs_dat_o (timer_us_dat_o),
-    .wbs_sel_i (timer_us_sel_i),
-    .wbs_we_i (timer_us_we_i),
-    .wbs_stb_i (timer_us_stb_i),
-    .wbs_cyc_i (timer_us_cyc_i),
-    .wbs_ack_o (timer_us_ack_o)
-  );
-
   VexiiRiscv  cpu0 (
     .clk (wb_clk),
     .reset (wb_rst),
-    .PrivilegedPlugin_logic_rdtime (64'b0),
+    .PrivilegedPlugin_logic_rdtime (time_us),
     .PrivilegedPlugin_logic_harts_0_int_m_timer (1'b0),
     .PrivilegedPlugin_logic_harts_0_int_m_software (1'b0),
     .PrivilegedPlugin_logic_harts_0_int_m_external (1'b0),
@@ -319,6 +289,15 @@ module jamsoc_top (
     .resetn (resetn),
     .wb_clk_o (wb_clk),
     .wb_rst_o (wb_rst)
+  );
+
+  timer #(
+    .WIDTH_DATA (64),
+    .CLKDIV (50)
+  ) timer_us (
+    .clk (wb_clk),
+    .rst (wb_rst),
+    .time_o (time_us)
   );
 endmodule
 
@@ -379,23 +358,13 @@ module jamsoc_wb_intercon (
   output wbs_i2c0_we_o,
   output wbs_i2c0_stb_o,
   output wbs_i2c0_cyc_o,
-  input wbs_i2c0_ack_i,
-
-  output [31:0] wbs_timer_us_adr_o,
-  output [31:0] wbs_timer_us_dat_o,
-  input [31:0] wbs_timer_us_dat_i,
-  output [3:0] wbs_timer_us_sel_o,
-  output wbs_timer_us_we_o,
-  output wbs_timer_us_stb_o,
-  output wbs_timer_us_cyc_o,
-  input wbs_timer_us_ack_i
+  input wbs_i2c0_ack_i
 );
 
   localparam [31:0] ADDR_bram0 = 32'h00000000;
   localparam [31:0] ADDR_gpio0 = 32'h10000000;
   localparam [31:0] ADDR_uart0 = 32'h10001000;
   localparam [31:0] ADDR_i2c0 = 32'h10002000;
-  localparam [31:0] ADDR_timer_us = 32'h10003000;
 
 
 
@@ -531,68 +500,31 @@ module jamsoc_wb_intercon (
   
 
 
-  wire vex_lsu_req_timer_us = wbm_vex_lsu_cyc_i && (wbm_vex_lsu_adr_i >= 32'h10003000) && (wbm_vex_lsu_adr_i < 32'h10003004);
-  wire vex_fetch_req_timer_us = wbm_vex_fetch_cyc_i && (wbm_vex_fetch_adr_i >= 32'h10003000) && (wbm_vex_fetch_adr_i < 32'h10003004);
-  wire [1:0] timer_us_reqs = { vex_fetch_req_timer_us, vex_lsu_req_timer_us };
-  reg [1:0] timer_us_grant = 0;
-  reg timer_us_busy = 0;
-  always @(posedge wb_clk_i) begin
-    if (wb_rst_i) begin
-      timer_us_grant <= 0;
-      timer_us_busy <= 0;
-    end else begin
-      if (timer_us_busy) begin
-        if (!timer_us_reqs[timer_us_grant]) begin
-          timer_us_busy <= 0;
-          timer_us_grant <= timer_us_grant == 1 ? 0 : (timer_us_grant + 1);
-        end
-      end else begin
-        if (timer_us_reqs[timer_us_grant]) begin
-          timer_us_busy <= 1;
-        end else begin
-          timer_us_grant <= timer_us_grant == 1 ? 0 : (timer_us_grant + 1);
-        end
-      end
-    end
-  end
-  assign wbs_timer_us_adr_o = (timer_us_grant == 0) ? wbm_vex_lsu_adr_i : (timer_us_grant == 1) ? wbm_vex_fetch_adr_i : 0;
-  assign wbs_timer_us_dat_o = (timer_us_grant == 0) ? wbm_vex_lsu_dat_i : (timer_us_grant == 1) ? wbm_vex_fetch_dat_i : 0;
-  assign wbs_timer_us_sel_o = (timer_us_grant == 0) ? wbm_vex_lsu_sel_i : (timer_us_grant == 1) ? wbm_vex_fetch_sel_i : 0;
-  assign wbs_timer_us_we_o = (timer_us_grant == 0) ? wbm_vex_lsu_we_i : (timer_us_grant == 1) ? wbm_vex_fetch_we_i : 0;
-  assign wbs_timer_us_cyc_o = (timer_us_grant == 0 && vex_lsu_req_timer_us) ? wbm_vex_lsu_cyc_i : (timer_us_grant == 1 && vex_fetch_req_timer_us) ? wbm_vex_fetch_cyc_i : 0;
-  assign wbs_timer_us_stb_o = (timer_us_grant == 0 && vex_lsu_req_timer_us) ? wbm_vex_lsu_stb_i : (timer_us_grant == 1 && vex_fetch_req_timer_us) ? wbm_vex_fetch_stb_i : 0;
-  
-
-
 
   assign wbm_vex_lsu_ack_o =
     (bram0_grant == 0 && vex_lsu_req_bram0 && wbs_bram0_ack_i) ||
     (gpio0_grant == 0 && vex_lsu_req_gpio0 && wbs_gpio0_ack_i) ||
     (uart0_grant == 0 && vex_lsu_req_uart0 && wbs_uart0_ack_i) ||
-    (i2c0_grant == 0 && vex_lsu_req_i2c0 && wbs_i2c0_ack_i) ||
-    (timer_us_grant == 0 && vex_lsu_req_timer_us && wbs_timer_us_ack_i);
+    (i2c0_grant == 0 && vex_lsu_req_i2c0 && wbs_i2c0_ack_i);
 
   assign wbm_vex_lsu_dat_o =
     (bram0_grant == 0 && vex_lsu_req_bram0) ? wbs_bram0_dat_i :
     (gpio0_grant == 0 && vex_lsu_req_gpio0) ? wbs_gpio0_dat_i :
     (uart0_grant == 0 && vex_lsu_req_uart0) ? wbs_uart0_dat_i :
     (i2c0_grant == 0 && vex_lsu_req_i2c0) ? wbs_i2c0_dat_i :
-    (timer_us_grant == 0 && vex_lsu_req_timer_us) ? wbs_timer_us_dat_i :
     32'b0;
 
   assign wbm_vex_fetch_ack_o =
     (bram0_grant == 1 && vex_fetch_req_bram0 && wbs_bram0_ack_i) ||
     (gpio0_grant == 1 && vex_fetch_req_gpio0 && wbs_gpio0_ack_i) ||
     (uart0_grant == 1 && vex_fetch_req_uart0 && wbs_uart0_ack_i) ||
-    (i2c0_grant == 1 && vex_fetch_req_i2c0 && wbs_i2c0_ack_i) ||
-    (timer_us_grant == 1 && vex_fetch_req_timer_us && wbs_timer_us_ack_i);
+    (i2c0_grant == 1 && vex_fetch_req_i2c0 && wbs_i2c0_ack_i);
 
   assign wbm_vex_fetch_dat_o =
     (bram0_grant == 1 && vex_fetch_req_bram0) ? wbs_bram0_dat_i :
     (gpio0_grant == 1 && vex_fetch_req_gpio0) ? wbs_gpio0_dat_i :
     (uart0_grant == 1 && vex_fetch_req_uart0) ? wbs_uart0_dat_i :
     (i2c0_grant == 1 && vex_fetch_req_i2c0) ? wbs_i2c0_dat_i :
-    (timer_us_grant == 1 && vex_fetch_req_timer_us) ? wbs_timer_us_dat_i :
     32'b0;
 
 

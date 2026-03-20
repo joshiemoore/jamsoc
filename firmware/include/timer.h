@@ -1,6 +1,6 @@
 #include <stdint.h>
 
 
-uint32_t time_us();
+uint64_t time_us();
 
-void delay_us(uint32_t us);
+void delay_us(uint64_t us);

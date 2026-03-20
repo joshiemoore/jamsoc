@@ -106,9 +106,6 @@ modules:
         wire: i2c_scl
       sda:
         wire: i2c_sda
-  timer_us:
-    module: wb_timer_us
-    address: 0x10003000
 
   cpu0:
     module: VexiiRiscv
@@ -119,7 +116,7 @@ modules:
       reset:
         wire: wb_rst
       PrivilegedPlugin_logic_rdtime:
-        constant: 64'b0 # TODO
+        wire: time_us
       PrivilegedPlugin_logic_harts_0_int_m_timer:
         constant: 1'b0
       PrivilegedPlugin_logic_harts_0_int_m_software:
@@ -178,3 +175,17 @@ modules:
         wire: wb_clk
       wb_rst_o:
         wire: wb_rst
+  timer_us:
+    module: timer
+    bus: false
+    params:
+      WIDTH_DATA: 64
+      CLKDIV: 50
+    ports:
+      clk:
+        wire: wb_clk
+      rst:
+        wire: wb_rst
+      time_o:
+        wire: time_us
+        width: 64

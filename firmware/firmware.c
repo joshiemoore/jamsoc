@@ -17,10 +17,12 @@ int main()
   while (1)
   {
     gpio_write(0xFFFFFFFF);
-    uart_tx('A');
-    delay_us(1000000);
+    delay_us(500000);
     gpio_write(0x00000000);
-    uart_tx('B');
-    delay_us(1000000);
+    delay_us(500000);
+    uint64_t time = time_us();
+    uart_print_hex_word(time >> 32);
+    uart_print_hex_word(time);
+    uart_print("\r\n");
   }
 }
