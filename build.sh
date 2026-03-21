@@ -4,7 +4,7 @@ CROSS_COMPILE="riscv32-unknown-elf"
 ARCH="rv32im_zicsr_zifencei"
 ABI="ilp32"
 
-CFLAGS="-Os -march=$ARCH -mabi=$ABI -Ifirmware/include/ -nostdlib -ffreestanding -ffunction-sections -fdata-sections -Wl,--gc-sections"
+CFLAGS="-Os -Wall -Werror -march=$ARCH -mabi=$ABI -Ifirmware/include/ -nostdlib -ffreestanding -ffunction-sections -fdata-sections -Wl,--gc-sections"
 ASMFLAGS="-march=$ARCH -mabi=$ABI"
 
 BUILD_DIR="firmware/build"
