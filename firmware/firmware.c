@@ -9,9 +9,9 @@
 
 int main()
 {
-  gpio_set_directions(0xFFFFFFFF);
-  uart_set_baud(115200);
   i2c_enable(50000);
+  gpio_set_directions(0xFFFFFFFF);
+
   lcd_init(0x27);
   lcd_print(0x27, "Hello, world");
   lcd_set_cursor(0x27, 1, 0);
