@@ -2,6 +2,7 @@ name: jamsoc
 
 width_addr: &width_addr 32
 width_data: &width_data 32
+num_harts: &num_harts 1
 
 top_ports:
   inputs:
@@ -106,6 +107,14 @@ modules:
         wire: i2c_scl
       sda:
         wire: i2c_sda
+  aclint_mtimer:
+    module: wb_aclint_mtimer
+    address: 0x20000000
+    words: 0x1000
+    ports:
+      int_m_timer:
+        wire: int_m_timer
+        width: *num_harts
 
   cpu0:
     module: VexiiRiscv
@@ -118,7 +127,7 @@ modules:
       PrivilegedPlugin_logic_rdtime:
         wire: time_us
       PrivilegedPlugin_logic_harts_0_int_m_timer:
-        constant: 1'b0
+        wire: int_m_timer
       PrivilegedPlugin_logic_harts_0_int_m_software:
         constant: 1'b0
       PrivilegedPlugin_logic_harts_0_int_m_external:

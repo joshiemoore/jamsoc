@@ -2546,7 +2546,7 @@ module VexiiRiscv (
   assign _zz_LsuCachelessPlugin_logic_onWb_rspShifted_2 = execute_ctrl4_down_early0_SrcPlugin_ADD_SUB_lane0[1 : 0];
   assign _zz_LsuCachelessPlugin_logic_onWb_rspShifted_5 = execute_ctrl4_down_early0_SrcPlugin_ADD_SUB_lane0[1 : 1];
   assign _zz_LsuCachelessPlugin_pmaBuilder_onTransfers_0_addressHit = (|((LsuCachelessPlugin_pmaBuilder_addressBits & 32'h0) == 32'h0));
-  assign _zz_LsuCachelessPlugin_logic_onPma_port_rsp_io = (|((LsuCachelessPlugin_pmaBuilder_addressBits & 32'h10000000) == 32'h0));
+  assign _zz_LsuCachelessPlugin_logic_onPma_port_rsp_io = (|((LsuCachelessPlugin_pmaBuilder_addressBits & 32'h30000000) == 32'h0));
   assign _zz_decode_ctrls_1_down_DecoderPlugin_logic_NEED_FPU_0 = _zz_decode_ctrls_1_down_DecoderPlugin_logic_NEED_FPU_0_1[0];
   assign _zz_decode_ctrls_1_down_DecoderPlugin_logic_NEED_FPU_0_1 = 1'b0;
   assign _zz_decode_ctrls_1_down_DecoderPlugin_logic_NEED_RM_0 = _zz_decode_ctrls_1_down_DecoderPlugin_logic_NEED_RM_0_1[0];
@@ -4839,7 +4839,7 @@ module VexiiRiscv (
   assign LsuCachelessPlugin_pmaBuilder_onTransfers_0_addressHit = _zz_LsuCachelessPlugin_pmaBuilder_onTransfers_0_addressHit[0];
   assign LsuCachelessPlugin_pmaBuilder_onTransfers_0_argsHit = (|((LsuCachelessPlugin_pmaBuilder_argsBits & 3'b000) == 3'b000));
   assign LsuCachelessPlugin_pmaBuilder_onTransfers_0_hit = (LsuCachelessPlugin_pmaBuilder_onTransfers_0_argsHit && LsuCachelessPlugin_pmaBuilder_onTransfers_0_addressHit);
-  assign LsuCachelessPlugin_logic_onPma_port_rsp_fault = (! ((|{((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hffffc000) == 32'h10000000),{((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hffffe000) == 32'h0),((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hfffff000) == 32'h10004000)}}) && (|LsuCachelessPlugin_pmaBuilder_onTransfers_0_hit)));
+  assign LsuCachelessPlugin_logic_onPma_port_rsp_fault = (! ((|{((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hf0000000) == 32'h10000000),{((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hf0000000) == 32'h20000000),((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hffffe000) == 32'h0)}}) && (|LsuCachelessPlugin_pmaBuilder_onTransfers_0_hit)));
   assign LsuCachelessPlugin_logic_onPma_port_rsp_io = (! _zz_LsuCachelessPlugin_logic_onPma_port_rsp_io[0]);
   assign decode_ctrls_1_down_DecoderPlugin_logic_NEED_FPU_0 = _zz_decode_ctrls_1_down_DecoderPlugin_logic_NEED_FPU_0[0];
   assign decode_ctrls_1_down_DecoderPlugin_logic_NEED_RM_0 = _zz_decode_ctrls_1_down_DecoderPlugin_logic_NEED_RM_0[0];

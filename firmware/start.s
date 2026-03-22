@@ -2,7 +2,9 @@
   .global _start
 
   .global uart_set_baud
-  .global handler_exception
+
+  .global handle_exception
+  .global handle_interrupt
 
 _start:
   li sp, 0x1ff0
@@ -14,34 +16,41 @@ _start:
   ori t0, t0, 1
   csrw mtvec, t0
 
+  /* enable global interrupts */
+  csrsi mstatus, (1 << 3)
+  /* enable mtimer interrupts */
+  li t0, (1 << 7)
+  csrs mie, t0
+
   call main
 hang:
   j hang
 
+  .align 6
 trap:
-  j exception
-  .word 0x13371337 /* TODO SSWI */
-  .word 0x13371307 /* reserved */
-  .word 0x13371337 /* TODO MSWI */
+  addi sp, sp, -32
+  sw a0, 0(sp)
+  sw a1, 4(sp)
+  sw a2, 8(sp)
+  sw ra, 12(sp)
+  sw t0, 16(sp)
 
-  .word 0x13371319 /* reserved */
-  .word 0x13371337 /* TODO STIMER */
-  .word 0x13371329 /* reserved */
-  .word 0x13371337 /* TODO MTIMER */
-
-  .word 0x13371349 /* reserved */
-  .word 0x13371337 /* TODO SEXTI */
-  .word 0x13371359 /* reserved */
-  .word 0x13371337 /* TODO MEXTI */
-
-  .word 0x13371369 /* reserved */
-  .word 0x13371337 /* TODO counter-overflow interrupt */
-  .word 0x13371379 /* reserved */
-  .word 0x13371389 /* reserved */
-
-exception:
   csrr a0, mepc
   csrr a1, mcause
   csrr a2, mtval
-  jal handler_exception
+  bltz a1, interrupt
+exception:
+  jal handle_exception
   j hang
+interrupt:
+  li t0, 0x7FFFFFFF
+  and a1, a1, t0
+  jal handle_interrupt
+
+  lw a0, 0(sp)
+  lw a1, 4(sp)
+  lw a2, 8(sp)
+  lw ra, 12(sp)
+  lw t0, 16(sp)
+  addi sp, sp, 32
+  mret
