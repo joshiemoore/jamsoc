@@ -110,10 +110,18 @@ modules:
   aclint_mtimer:
     module: wb_aclint_mtimer
     address: 0x20000000
-    words: 0x1000
+    words: 0x2000
     ports:
       int_m_timer:
         wire: int_m_timer
+        width: *num_harts
+  aclint_mswi:
+    module: wb_aclint_mswi
+    address: 0x21000000
+    words: 0x1000
+    ports:
+      int_m_software:
+        wire: int_m_software
         width: *num_harts
 
   cpu0:
@@ -129,7 +137,7 @@ modules:
       PrivilegedPlugin_logic_harts_0_int_m_timer:
         wire: int_m_timer
       PrivilegedPlugin_logic_harts_0_int_m_software:
-        constant: 1'b0
+        constant: int_m_software
       PrivilegedPlugin_logic_harts_0_int_m_external:
         constant: 1'b0
       LsuCachelessWishbonePlugin_logic_bridge_down_CYC:

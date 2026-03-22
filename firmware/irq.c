@@ -27,7 +27,10 @@ void handle_interrupt(uint32_t mepc, uint32_t mcause, uint32_t mtval)
       // TODO
       break;
     case INT_MSWI:
-      // TODO
+      // TODO unset msip based on hart ID
+      uart_print("\r\nmswi!\r\n");
+      volatile uint32_t* msip = (volatile uint32_t*)0x21000000;
+      *msip = 0;
       break;
     case INT_STIMER:
       // TODO
@@ -36,9 +39,8 @@ void handle_interrupt(uint32_t mepc, uint32_t mcause, uint32_t mtval)
       // TODO
       uart_print("\r\ntimer!\r\n");
       // TODO reset timer based on hart ID
-      //volatile uint64_t* mtimer = (volatile uint64_t*)0x20000000;
       volatile uint64_t* mtimecmp = (volatile uint64_t*)0x20000008;
-      *mtimecmp = *mtimecmp + 100000000;
+      *mtimecmp = *mtimecmp + 200000000;
       break;
     case INT_SEXTI:
       // TODO

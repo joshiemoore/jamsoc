@@ -18,8 +18,8 @@ _start:
 
   /* enable global interrupts */
   csrsi mstatus, (1 << 3)
-  /* enable mtimer interrupts */
-  li t0, (1 << 7)
+  /* enable mtimer and mswi interrupts */
+  li t0, 0x88
   csrs mie, t0
 
   call main

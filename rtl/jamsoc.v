@@ -35,6 +35,7 @@ module jamsoc_top (
   wire [31:0] fetch_mosi;
   wire [3:0] fetch_sel;
   wire int_m_timer;
+  wire int_m_software;
   wire wb_clk;
   wire wb_rst;
   wire [63:0] time_us;
@@ -101,6 +102,15 @@ module jamsoc_top (
   wire aclint_mtimer_stb_i;
   wire aclint_mtimer_cyc_i;
   wire aclint_mtimer_ack_o;
+
+  wire [31:0] aclint_mswi_adr_i;
+  wire [31:0] aclint_mswi_dat_i;
+  wire [31:0] aclint_mswi_dat_o;
+  wire [3:0] aclint_mswi_sel_i;
+  wire aclint_mswi_we_i;
+  wire aclint_mswi_stb_i;
+  wire aclint_mswi_cyc_i;
+  wire aclint_mswi_ack_o;
 
   assign dbg_fetch_cyc = fetch_cyc;
   assign dbg_lsu_cyc = lsu_cyc;
@@ -170,7 +180,16 @@ module jamsoc_top (
     .wbs_aclint_mtimer_we_o (aclint_mtimer_we_i),
     .wbs_aclint_mtimer_stb_o (aclint_mtimer_stb_i),
     .wbs_aclint_mtimer_cyc_o (aclint_mtimer_cyc_i),
-    .wbs_aclint_mtimer_ack_i (aclint_mtimer_ack_o)
+    .wbs_aclint_mtimer_ack_i (aclint_mtimer_ack_o),
+
+    .wbs_aclint_mswi_adr_o (aclint_mswi_adr_i),
+    .wbs_aclint_mswi_dat_o (aclint_mswi_dat_i),
+    .wbs_aclint_mswi_dat_i (aclint_mswi_dat_o),
+    .wbs_aclint_mswi_sel_o (aclint_mswi_sel_i),
+    .wbs_aclint_mswi_we_o (aclint_mswi_we_i),
+    .wbs_aclint_mswi_stb_o (aclint_mswi_stb_i),
+    .wbs_aclint_mswi_cyc_o (aclint_mswi_cyc_i),
+    .wbs_aclint_mswi_ack_i (aclint_mswi_ack_o)
   );
 
   wb_vex_lsu #(
@@ -292,12 +311,26 @@ module jamsoc_top (
     .int_m_timer (int_m_timer)
   );
 
+  wb_aclint_mswi  aclint_mswi (
+    .wb_rst_i (wb_rst),
+    .wb_clk_i (wb_clk),
+    .wbs_adr_i (aclint_mswi_adr_i),
+    .wbs_dat_i (aclint_mswi_dat_i),
+    .wbs_dat_o (aclint_mswi_dat_o),
+    .wbs_sel_i (aclint_mswi_sel_i),
+    .wbs_we_i (aclint_mswi_we_i),
+    .wbs_stb_i (aclint_mswi_stb_i),
+    .wbs_cyc_i (aclint_mswi_cyc_i),
+    .wbs_ack_o (aclint_mswi_ack_o),
+    .int_m_software (int_m_software)
+  );
+
   VexiiRiscv  cpu0 (
     .clk (wb_clk),
     .reset (wb_rst),
     .PrivilegedPlugin_logic_rdtime (time_us),
     .PrivilegedPlugin_logic_harts_0_int_m_timer (int_m_timer),
-    .PrivilegedPlugin_logic_harts_0_int_m_software (1'b0),
+    .PrivilegedPlugin_logic_harts_0_int_m_software (int_m_software),
     .PrivilegedPlugin_logic_harts_0_int_m_external (1'b0),
     .LsuCachelessWishbonePlugin_logic_bridge_down_CYC (lsu_cyc),
     .LsuCachelessWishbonePlugin_logic_bridge_down_STB (lsu_stb),
@@ -400,7 +433,16 @@ module jamsoc_wb_intercon (
   output wbs_aclint_mtimer_we_o,
   output wbs_aclint_mtimer_stb_o,
   output wbs_aclint_mtimer_cyc_o,
-  input wbs_aclint_mtimer_ack_i
+  input wbs_aclint_mtimer_ack_i,
+
+  output [31:0] wbs_aclint_mswi_adr_o,
+  output [31:0] wbs_aclint_mswi_dat_o,
+  input [31:0] wbs_aclint_mswi_dat_i,
+  output [3:0] wbs_aclint_mswi_sel_o,
+  output wbs_aclint_mswi_we_o,
+  output wbs_aclint_mswi_stb_o,
+  output wbs_aclint_mswi_cyc_o,
+  input wbs_aclint_mswi_ack_i
 );
 
   localparam [31:0] ADDR_bram0 = 32'h00000000;
@@ -408,6 +450,7 @@ module jamsoc_wb_intercon (
   localparam [31:0] ADDR_uart0 = 32'h10001000;
   localparam [31:0] ADDR_i2c0 = 32'h10002000;
   localparam [31:0] ADDR_aclint_mtimer = 32'h20000000;
+  localparam [31:0] ADDR_aclint_mswi = 32'h21000000;
 
 
 
@@ -543,8 +586,8 @@ module jamsoc_wb_intercon (
   
 
 
-  wire vex_lsu_req_aclint_mtimer = wbm_vex_lsu_cyc_i && (wbm_vex_lsu_adr_i >= 32'h20000000) && (wbm_vex_lsu_adr_i < 32'h20004000);
-  wire vex_fetch_req_aclint_mtimer = wbm_vex_fetch_cyc_i && (wbm_vex_fetch_adr_i >= 32'h20000000) && (wbm_vex_fetch_adr_i < 32'h20004000);
+  wire vex_lsu_req_aclint_mtimer = wbm_vex_lsu_cyc_i && (wbm_vex_lsu_adr_i >= 32'h20000000) && (wbm_vex_lsu_adr_i < 32'h20008000);
+  wire vex_fetch_req_aclint_mtimer = wbm_vex_fetch_cyc_i && (wbm_vex_fetch_adr_i >= 32'h20000000) && (wbm_vex_fetch_adr_i < 32'h20008000);
   wire [1:0] aclint_mtimer_reqs = { vex_fetch_req_aclint_mtimer, vex_lsu_req_aclint_mtimer };
   reg [1:0] aclint_mtimer_grant = 0;
   reg aclint_mtimer_busy = 0;
@@ -576,13 +619,47 @@ module jamsoc_wb_intercon (
   
 
 
+  wire vex_lsu_req_aclint_mswi = wbm_vex_lsu_cyc_i && (wbm_vex_lsu_adr_i >= 32'h21000000) && (wbm_vex_lsu_adr_i < 32'h21004000);
+  wire vex_fetch_req_aclint_mswi = wbm_vex_fetch_cyc_i && (wbm_vex_fetch_adr_i >= 32'h21000000) && (wbm_vex_fetch_adr_i < 32'h21004000);
+  wire [1:0] aclint_mswi_reqs = { vex_fetch_req_aclint_mswi, vex_lsu_req_aclint_mswi };
+  reg [1:0] aclint_mswi_grant = 0;
+  reg aclint_mswi_busy = 0;
+  always @(posedge wb_clk_i) begin
+    if (wb_rst_i) begin
+      aclint_mswi_grant <= 0;
+      aclint_mswi_busy <= 0;
+    end else begin
+      if (aclint_mswi_busy) begin
+        if (!aclint_mswi_reqs[aclint_mswi_grant]) begin
+          aclint_mswi_busy <= 0;
+          aclint_mswi_grant <= aclint_mswi_grant == 1 ? 0 : (aclint_mswi_grant + 1);
+        end
+      end else begin
+        if (aclint_mswi_reqs[aclint_mswi_grant]) begin
+          aclint_mswi_busy <= 1;
+        end else begin
+          aclint_mswi_grant <= aclint_mswi_grant == 1 ? 0 : (aclint_mswi_grant + 1);
+        end
+      end
+    end
+  end
+  assign wbs_aclint_mswi_adr_o = (aclint_mswi_grant == 0) ? wbm_vex_lsu_adr_i : (aclint_mswi_grant == 1) ? wbm_vex_fetch_adr_i : 0;
+  assign wbs_aclint_mswi_dat_o = (aclint_mswi_grant == 0) ? wbm_vex_lsu_dat_i : (aclint_mswi_grant == 1) ? wbm_vex_fetch_dat_i : 0;
+  assign wbs_aclint_mswi_sel_o = (aclint_mswi_grant == 0) ? wbm_vex_lsu_sel_i : (aclint_mswi_grant == 1) ? wbm_vex_fetch_sel_i : 0;
+  assign wbs_aclint_mswi_we_o = (aclint_mswi_grant == 0) ? wbm_vex_lsu_we_i : (aclint_mswi_grant == 1) ? wbm_vex_fetch_we_i : 0;
+  assign wbs_aclint_mswi_cyc_o = (aclint_mswi_grant == 0 && vex_lsu_req_aclint_mswi) ? wbm_vex_lsu_cyc_i : (aclint_mswi_grant == 1 && vex_fetch_req_aclint_mswi) ? wbm_vex_fetch_cyc_i : 0;
+  assign wbs_aclint_mswi_stb_o = (aclint_mswi_grant == 0 && vex_lsu_req_aclint_mswi) ? wbm_vex_lsu_stb_i : (aclint_mswi_grant == 1 && vex_fetch_req_aclint_mswi) ? wbm_vex_fetch_stb_i : 0;
+  
+
+
 
   assign wbm_vex_lsu_ack_o =
     (bram0_grant == 0 && vex_lsu_req_bram0 && wbs_bram0_ack_i) ||
     (gpio0_grant == 0 && vex_lsu_req_gpio0 && wbs_gpio0_ack_i) ||
     (uart0_grant == 0 && vex_lsu_req_uart0 && wbs_uart0_ack_i) ||
     (i2c0_grant == 0 && vex_lsu_req_i2c0 && wbs_i2c0_ack_i) ||
-    (aclint_mtimer_grant == 0 && vex_lsu_req_aclint_mtimer && wbs_aclint_mtimer_ack_i);
+    (aclint_mtimer_grant == 0 && vex_lsu_req_aclint_mtimer && wbs_aclint_mtimer_ack_i) ||
+    (aclint_mswi_grant == 0 && vex_lsu_req_aclint_mswi && wbs_aclint_mswi_ack_i);
 
   assign wbm_vex_lsu_dat_o =
     (bram0_grant == 0 && vex_lsu_req_bram0) ? wbs_bram0_dat_i :
@@ -590,6 +667,7 @@ module jamsoc_wb_intercon (
     (uart0_grant == 0 && vex_lsu_req_uart0) ? wbs_uart0_dat_i :
     (i2c0_grant == 0 && vex_lsu_req_i2c0) ? wbs_i2c0_dat_i :
     (aclint_mtimer_grant == 0 && vex_lsu_req_aclint_mtimer) ? wbs_aclint_mtimer_dat_i :
+    (aclint_mswi_grant == 0 && vex_lsu_req_aclint_mswi) ? wbs_aclint_mswi_dat_i :
     32'b0;
 
   assign wbm_vex_fetch_ack_o =
@@ -597,7 +675,8 @@ module jamsoc_wb_intercon (
     (gpio0_grant == 1 && vex_fetch_req_gpio0 && wbs_gpio0_ack_i) ||
     (uart0_grant == 1 && vex_fetch_req_uart0 && wbs_uart0_ack_i) ||
     (i2c0_grant == 1 && vex_fetch_req_i2c0 && wbs_i2c0_ack_i) ||
-    (aclint_mtimer_grant == 1 && vex_fetch_req_aclint_mtimer && wbs_aclint_mtimer_ack_i);
+    (aclint_mtimer_grant == 1 && vex_fetch_req_aclint_mtimer && wbs_aclint_mtimer_ack_i) ||
+    (aclint_mswi_grant == 1 && vex_fetch_req_aclint_mswi && wbs_aclint_mswi_ack_i);
 
   assign wbm_vex_fetch_dat_o =
     (bram0_grant == 1 && vex_fetch_req_bram0) ? wbs_bram0_dat_i :
@@ -605,6 +684,7 @@ module jamsoc_wb_intercon (
     (uart0_grant == 1 && vex_fetch_req_uart0) ? wbs_uart0_dat_i :
     (i2c0_grant == 1 && vex_fetch_req_i2c0) ? wbs_i2c0_dat_i :
     (aclint_mtimer_grant == 1 && vex_fetch_req_aclint_mtimer) ? wbs_aclint_mtimer_dat_i :
+    (aclint_mswi_grant == 1 && vex_fetch_req_aclint_mswi) ? wbs_aclint_mswi_dat_i :
     32'b0;
 
 

@@ -9,9 +9,10 @@
 
 int main()
 {
+  volatile uint32_t* msip = (volatile uint32_t*)0x21000000;
   volatile uint64_t* mtimer = (volatile uint64_t*)0x20000000;
   volatile uint64_t* mtimecmp = (volatile uint64_t*)0x20000008;
-  *mtimecmp = *mtimer + 100000000;
+  *mtimecmp = *mtimer + 200000000;
   while (1)
   {
     uart_print_hex_word(*mtimer);
@@ -19,5 +20,6 @@ int main()
     uart_print_hex_word(*mtimecmp);
     uart_print("\r\n");
     delay_us(1000000);
+    *msip = 1;
   }
 }

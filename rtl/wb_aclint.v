@@ -85,16 +85,43 @@ module wb_aclint_mswi #(
   
   input [WIDTH_ADDR-1:0] wbs_adr_i,
   input [WIDTH_DATA-1:0] wbs_dat_i,
-  output [WIDTH_DATA-1:0] wbs_dat_o,
+  output reg [WIDTH_DATA-1:0] wbs_dat_o,
   input [(WIDTH_DATA/8)-1:0] wbs_sel_i,
   input wbs_we_i,
   input wbs_cyc_i,
   input wbs_stb_i,
-  output wbs_ack_o,
+  output reg wbs_ack_o,
   
-  output [NUM_HARTS-1:0] int_m_swi
+  output reg [NUM_HARTS-1:0] int_m_software
 );
 
-  // TODO
+  reg [31:0] msip_regs [NUM_HARTS-1:0];
+  integer midx;
+  
+  wire [11:0] msip_addr = wbs_adr_i[13:2];
+  
+  wire req = wbs_cyc_i && wbs_stb_i;
+  
+  always @(posedge wb_clk_i) begin
+    if (wb_rst_i) begin
+	   wbs_ack_o <= 1'b0;
+		wbs_dat_o <= 1'b0;
+	   for (midx = 0; midx < NUM_HARTS; midx = midx + 1) begin
+		  msip_regs[midx] <= 32'b0;
+		end
+	 end else begin
+	   wbs_ack_o <= req;
+		if (req && msip_addr < NUM_HARTS) begin
+		  if (wbs_we_i) begin
+		    msip_regs[msip_addr] <= { 31'b0, wbs_dat_i[0] };
+		  end else begin
+		    wbs_dat_o <= msip_regs[msip_addr];
+		  end
+		end
+		for (midx = 0; midx < NUM_HARTS; midx = midx + 1) begin
+		  int_m_software[midx] <= (msip_regs[midx][0] == 1);
+		end
+	 end
+  end
 
 endmodule
