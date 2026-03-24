@@ -8,7 +8,7 @@ module wb_timer #(
   
   input [WIDTH_ADDR-1:0]      wbs_adr_i,
   input [WIDTH_DATA-1:0]      wbs_dat_i,
-  output [WIDTH_DATA-1:0] wbs_dat_o = {WIDTH_DATA{1'b0}},
+  output [WIDTH_DATA-1:0] wbs_dat_o,
   input [(WIDTH_DATA/8)-1:0]  wbs_sel_i,
   input wbs_we_i,
   input wbs_stb_i,
@@ -20,11 +20,11 @@ module wb_timer #(
 
   timer #(
     .WIDTH_DATA (WIDTH_DATA),
-	 .CLKDIV (CLKDIV)
+    .CLKDIV (CLKDIV)
   ) timer (
     .clk (wb_clk_i),
-	 .rst (wb_rst_i),
-	 .time_o (wbs_dat_o)
+    .rst (wb_rst_i),
+    .time_o (wbs_dat_o)
   );
 endmodule
 
@@ -41,16 +41,16 @@ module timer #(
 
   always @(posedge clk) begin
     if (rst) begin
-	   time_o <= {WIDTH_DATA{1'b0}};
-		div <= {WIDTH_DATA{1'b0}};
-	 end else begin
-	   if (div == CLKDIV - 1) begin
-		  div <= 0;
-		  time_o <= time_o + 1;
-		end else begin
-		  div <= div + 1;
-		end
-	 end
+      time_o <= {WIDTH_DATA{1'b0}};
+	  div <= {WIDTH_DATA{1'b0}};
+    end else begin
+      if (div == CLKDIV - 1) begin
+        div <= 0;
+        time_o <= time_o + 1;
+      end else begin
+        div <= div + 1;
+      end
+    end
   end
 
 endmodule

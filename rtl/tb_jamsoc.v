@@ -16,7 +16,7 @@ module tb_jamsoc;
 	 .gpio (gpio)
   );
   
-  always #10 clk = ~clk;
+  always #5 clk = ~clk;
   
   initial begin
     resetn = 0;

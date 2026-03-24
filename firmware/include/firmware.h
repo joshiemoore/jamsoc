@@ -1,1 +1,1 @@
-#define CLOCK_HZ 50000000
+#define CLOCK_HZ 100000000

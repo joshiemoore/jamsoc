@@ -4839,7 +4839,7 @@ module VexiiRiscv (
   assign LsuCachelessPlugin_pmaBuilder_onTransfers_0_addressHit = _zz_LsuCachelessPlugin_pmaBuilder_onTransfers_0_addressHit[0];
   assign LsuCachelessPlugin_pmaBuilder_onTransfers_0_argsHit = (|((LsuCachelessPlugin_pmaBuilder_argsBits & 3'b000) == 3'b000));
   assign LsuCachelessPlugin_pmaBuilder_onTransfers_0_hit = (LsuCachelessPlugin_pmaBuilder_onTransfers_0_argsHit && LsuCachelessPlugin_pmaBuilder_onTransfers_0_addressHit);
-  assign LsuCachelessPlugin_logic_onPma_port_rsp_fault = (! ((|{((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hf0000000) == 32'h10000000),{((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hf0000000) == 32'h20000000),((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hffffe000) == 32'h0)}}) && (|LsuCachelessPlugin_pmaBuilder_onTransfers_0_hit)));
+  assign LsuCachelessPlugin_logic_onPma_port_rsp_fault = (! ((|{((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hf0000000) == 32'h10000000),{((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hf0000000) == 32'h20000000),((LsuCachelessPlugin_pmaBuilder_addressBits & 32'hfff80000) == 32'h0)}}) && (|LsuCachelessPlugin_pmaBuilder_onTransfers_0_hit)));
   assign LsuCachelessPlugin_logic_onPma_port_rsp_io = (! _zz_LsuCachelessPlugin_logic_onPma_port_rsp_io[0]);
   assign decode_ctrls_1_down_DecoderPlugin_logic_NEED_FPU_0 = _zz_decode_ctrls_1_down_DecoderPlugin_logic_NEED_FPU_0[0];
   assign decode_ctrls_1_down_DecoderPlugin_logic_NEED_RM_0 = _zz_decode_ctrls_1_down_DecoderPlugin_logic_NEED_RM_0[0];
@@ -6575,7 +6575,7 @@ module VexiiRiscv (
   assign FetchCachelessPlugin_pmaBuilder_onTransfers_0_addressHit = _zz_FetchCachelessPlugin_pmaBuilder_onTransfers_0_addressHit[0];
   assign FetchCachelessPlugin_pmaBuilder_onTransfers_0_argsHit = (|1'b1);
   assign FetchCachelessPlugin_pmaBuilder_onTransfers_0_hit = (FetchCachelessPlugin_pmaBuilder_onTransfers_0_argsHit && FetchCachelessPlugin_pmaBuilder_onTransfers_0_addressHit);
-  assign FetchCachelessPlugin_logic_onPma_port_rsp_fault = (! ((|((FetchCachelessPlugin_pmaBuilder_addressBits & 32'hffffe000) == 32'h0)) && (|FetchCachelessPlugin_pmaBuilder_onTransfers_0_hit)));
+  assign FetchCachelessPlugin_logic_onPma_port_rsp_fault = (! ((|((FetchCachelessPlugin_pmaBuilder_addressBits & 32'hfff80000) == 32'h0)) && (|FetchCachelessPlugin_pmaBuilder_onTransfers_0_hit)));
   assign FetchCachelessPlugin_logic_onPma_port_rsp_io = (! _zz_FetchCachelessPlugin_logic_onPma_port_rsp_io_1[0]);
   always @(*) begin
     FetchCachelessPlugin_logic_bus_cmd_ready = FetchCachelessWishbonePlugin_logic_bridge_cmdPipe_ready;

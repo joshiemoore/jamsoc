@@ -35,4 +35,4 @@ $CROSS_COMPILE-objcopy -O binary $BUILD_DIR/firmware.elf $BUILD_DIR/firmware.bin
 
 #truncate -s 8192 firmware/firmware.bin
 hexdump -v -e '"%08x\n"' $BUILD_DIR/firmware.bin > firmware.hex
-./scripts/bin_to_mif.py $BUILD_DIR/firmware.bin > firmware.mif
+./scripts/bin_to_coe.py $BUILD_DIR/firmware.bin > firmware.coe

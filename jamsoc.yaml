@@ -14,7 +14,7 @@ top_ports:
     dbg_fetch_cyc: 1
     dbg_lsu_cyc: 1
   inouts:
-    gpio: 32
+    gpio: 8
     i2c_scl: 1
     i2c_sda: 1
 
@@ -78,9 +78,9 @@ modules:
       fetch_sel:
         wire: fetch_sel
   bram0:
-    module: wb_bram
+    module: wb_a7_bram
     address: 0x00000000
-    words: 2048
+    words: 0x20000
   gpio0:
     module: wb_gpio
     address: 0x10000000
@@ -197,7 +197,7 @@ modules:
     bus: false
     params:
       WIDTH_DATA: 64
-      CLKDIV: 50
+      CLKDIV: 100
     ports:
       clk:
         wire: wb_clk

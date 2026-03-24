@@ -12,7 +12,7 @@ module jamsoc_top (
   output dbg_fetch_cyc,
   output dbg_lsu_cyc,
 
-  inout [31:0] gpio,
+  inout [7:0] gpio,
   inout i2c_scl,
   inout i2c_sda
 );
@@ -240,7 +240,7 @@ module jamsoc_top (
     .fetch_sel (fetch_sel)
   );
 
-  wb_bram  bram0 (
+  wb_a7_bram  bram0 (
     .wb_rst_i (wb_rst),
     .wb_clk_i (wb_clk),
     .wbs_adr_i (bram0_adr_i),
@@ -359,7 +359,7 @@ module jamsoc_top (
 
   timer #(
     .WIDTH_DATA (64),
-    .CLKDIV (50)
+    .CLKDIV (100)
   ) timer_us (
     .clk (wb_clk),
     .rst (wb_rst),
@@ -454,8 +454,8 @@ module jamsoc_wb_intercon (
 
 
 
-  wire vex_lsu_req_bram0 = wbm_vex_lsu_cyc_i && (wbm_vex_lsu_adr_i >= 32'h00000000) && (wbm_vex_lsu_adr_i < 32'h00002000);
-  wire vex_fetch_req_bram0 = wbm_vex_fetch_cyc_i && (wbm_vex_fetch_adr_i >= 32'h00000000) && (wbm_vex_fetch_adr_i < 32'h00002000);
+  wire vex_lsu_req_bram0 = wbm_vex_lsu_cyc_i && (wbm_vex_lsu_adr_i >= 32'h00000000) && (wbm_vex_lsu_adr_i < 32'h00080000);
+  wire vex_fetch_req_bram0 = wbm_vex_fetch_cyc_i && (wbm_vex_fetch_adr_i >= 32'h00000000) && (wbm_vex_fetch_adr_i < 32'h00080000);
   wire [1:0] bram0_reqs = { vex_fetch_req_bram0, vex_lsu_req_bram0 };
   reg [1:0] bram0_grant = 0;
   reg bram0_busy = 0;

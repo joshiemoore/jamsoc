@@ -2,6 +2,7 @@
 *.qsf
 *.qpf
 *.rpt
+*.qws
 db/
 incremental_db/
 output_files/
@@ -11,6 +12,7 @@ simulation/
 build/
 firmware.mif
 firmware.hex
+firmware.coe
 
 __pycache__
 
