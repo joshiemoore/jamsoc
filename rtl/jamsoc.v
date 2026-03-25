@@ -34,6 +34,7 @@ module jamsoc_top (
   wire [31:0] fetch_miso;
   wire [31:0] fetch_mosi;
   wire [3:0] fetch_sel;
+  wire uart_int;
   wire int_m_timer;
   wire int_m_software;
   wire wb_clk;
@@ -267,7 +268,7 @@ module jamsoc_top (
     .gpio (gpio)
   );
 
-  wb_simpleuart  uart0 (
+  wb_16550  uart0 (
     .wb_rst_i (wb_rst),
     .wb_clk_i (wb_clk),
     .wbs_adr_i (uart0_adr_i),
@@ -278,8 +279,9 @@ module jamsoc_top (
     .wbs_stb_i (uart0_stb_i),
     .wbs_cyc_i (uart0_cyc_i),
     .wbs_ack_o (uart0_ack_o),
-    .uart_rx (uart_rx),
-    .uart_tx (uart_tx)
+    .uart_int_o (uart_int),
+    .uart_rx_i (uart_rx),
+    .uart_tx_o (uart_tx)
   );
 
   wb_i2c_master  i2c0 (

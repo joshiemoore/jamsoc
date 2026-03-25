@@ -90,13 +90,15 @@ modules:
         wire: gpio
         width: 32
   uart0:
-    module: wb_simpleuart
+    module: wb_16550
     address: 0x10001000
     words: 2
     ports:
-      uart_rx:
+      uart_int_o:
+        wire: uart_int
+      uart_rx_i:
         wire: uart_rx
-      uart_tx:
+      uart_tx_o:
         wire: uart_tx
   i2c0:
     module: wb_i2c_master

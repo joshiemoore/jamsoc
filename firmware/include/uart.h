@@ -1,5 +1,9 @@
+// basic UART 16550 driver for testing
+
 #include <stdint.h>
 
+
+// TODO enable/disable interrupts, add interrupt handler
 
 void uart_set_baud(uint32_t baud);
 
