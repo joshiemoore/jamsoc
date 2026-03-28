@@ -95,7 +95,7 @@ modules:
     words: 2
     ports:
       uart_int_o:
-        wire: uart_int
+        wire: plic_int_i[0]
       uart_rx_i:
         wire: uart_rx
       uart_tx_o:
@@ -125,6 +125,16 @@ modules:
       int_m_software:
         wire: int_m_software
         width: *num_harts
+  plic:
+    module: wb_plic_top
+    address: 0x30000000
+    words: 0x10000000
+    ports:
+      int_i:
+        wire: plic_int_i
+        width: 31
+      int_o:
+        wire: plic_int_o
 
   cpu0:
     module: VexiiRiscv
@@ -141,7 +151,7 @@ modules:
       PrivilegedPlugin_logic_harts_0_int_m_software:
         constant: int_m_software
       PrivilegedPlugin_logic_harts_0_int_m_external:
-        constant: 1'b0
+        constant: plic_int_o
       LsuCachelessWishbonePlugin_logic_bridge_down_CYC:
         wire: lsu_cyc
       LsuCachelessWishbonePlugin_logic_bridge_down_STB:

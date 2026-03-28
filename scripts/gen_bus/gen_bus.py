@@ -63,12 +63,13 @@ if __name__ == '__main__':
           else: continue
         if (port_wire in top_inputs) or (port_wire in top_outputs) or (port_wire in top_inouts): continue
         port_width = port.get('width')
-        port_wire_strip = re.sub(r'\[\d+(:\d+)?\]', '', port_wire)
-        if port_wire_strip in top_wires:
-          if top_wires[port_wire_strip] is None:
-            top_wires[port_wire_strip] = port_width
+        is_slice = re.search(r'\[\d+(:\d+)?\]', port_wire)
+        if is_slice: continue
+        if port_wire in top_wires:
+          if top_wires[port_wire] is None:
+            top_wires[port_wire] = port_width
           else:
-            if port_width is not None and top_wires[port_wire_strip] != port_width:
+            if port_width is not None and top_wires[port_wire] != port_width:
               error(f'width mismatch for wire "{port_wire}": ({port_width}, {top_wires[port_wire]}')
         else:
           top_wires[port_wire] = port_width

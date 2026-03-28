@@ -16,10 +16,10 @@ _start:
   ori t0, t0, 1
   csrw mtvec, t0
 
-  /* enable global interrupts */
-  csrsi mstatus, (1 << 3)
-  /* enable mtimer and mswi interrupts */
-  li t0, 0x88
+  /* enable global machine interrupts */
+  csrsi mstatus, 0x08
+  /* enable mtimer, mswi, and mext interrupts */
+  li t0, 0x0888
   csrs mie, t0
 
   call main
