@@ -23,18 +23,18 @@ void handle_interrupt(uint32_t mepc, uint32_t mcause, uint32_t mtval)
 {
   switch (mcause)
   {
-    case INT_SSWI:
-      // TODO
-      break;
+    //case INT_SSWI:
+    //  // TODO
+    //  break;
     case INT_MSWI:
       // TODO unset msip based on hart ID
       uart_print("\r\nmswi!\r\n");
       volatile uint32_t* msip = (volatile uint32_t*)0x21000000;
       *msip = 0;
       break;
-    case INT_STIMER:
-      // TODO
-      break;
+    //case INT_STIMER:
+    //  // TODO
+    //  break;
     case INT_MTIMER:
       // TODO
       uart_print("\r\ntimer!\r\n");
@@ -42,15 +42,15 @@ void handle_interrupt(uint32_t mepc, uint32_t mcause, uint32_t mtval)
       volatile uint64_t* mtimecmp = (volatile uint64_t*)0x20000008;
       *mtimecmp = *mtimecmp + 200000000;
       break;
-    case INT_SEXTI:
-      // TODO
-      break;
-    case INT_MEXTI:
-      // TODO
-      break;
-    case INT_CNTRF:
-      // TODO
-      break;
+    //case INT_SEXTI:
+    //  // TODO
+    //  break;
+    //case INT_MEXTI:
+    //  // TODO
+    //  break;
+    //case INT_CNTRF:
+    //  // TODO
+    //  break;
     default:
       uart_print("unhandled interrupt exception\r\n");
       handle_exception(mepc, mcause, mtval);

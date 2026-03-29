@@ -9,12 +9,14 @@
 _start:
   li sp, 0x1ff0
 
-  li a0, 115200
-  call uart_set_baud
-
   la t0, trap
   ori t0, t0, 1
   csrw mtvec, t0
+
+  li a0, 115200
+  call uart_set_baud
+
+  call plic_init
 
   /* enable global machine interrupts */
   csrsi mstatus, 0x08

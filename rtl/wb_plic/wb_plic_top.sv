@@ -15,7 +15,7 @@ module wb_plic_top #(
   input wbs_stb_i,
   output reg wbs_ack_o,
   
-  input [NUM_SOURCES:0] int_i,
+  input [NUM_SOURCES-1:0] int_i,
   output reg int_o
 );
 
@@ -45,10 +45,10 @@ module wb_plic_top #(
   genvar isidx;
   generate
     for (isidx = 1; isidx <= NUM_SOURCES; isidx++) begin
-      plic_gateway (
+      plic_gateway gateway (
         .clk (wb_clk_i),
         .rst (wb_rst_i),
-        .int_i (int_i[isidx]),
+        .int_i (int_i[isidx-1]),
         .priority_i (int_priority[isidx]),
         .active_i (int_active[isidx >> 5][isidx & 5'h1f]),
         .pending_o (int_pending[isidx >> 5][isidx & 5'h1f])
@@ -61,7 +61,7 @@ module wb_plic_top #(
   genvar itidx;
   generate
     for (itidx = 0; itidx < NUM_TARGETS; itidx++) begin
-      plic_index (
+      plic_index index (
         .int_pending_i (int_pending),
         .int_enable_i (int_enable[itidx]),
         .int_priorities_i (int_priority),

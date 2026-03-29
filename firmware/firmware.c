@@ -1,14 +1,16 @@
+#include <stdbool.h>
 #include <stdint.h>
 
-#include <i2c.h>
-#include <gpio.h>
 #include <uart.h>
 #include <timer.h>
-#include <lcd.h>
+#include <plic.h>
 
 
 int main()
 {
+  plic_set_priority(PLIC_SOURCE_UART, 1);
+  plic_set_ie(PLIC_SOURCE_UART, true);
+
   volatile uint32_t* msip = (volatile uint32_t*)0x21000000;
   volatile uint64_t* mtimer = (volatile uint64_t*)0x20000000;
   volatile uint64_t* mtimecmp = (volatile uint64_t*)0x20000008;

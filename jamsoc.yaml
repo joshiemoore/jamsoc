@@ -128,7 +128,9 @@ modules:
   plic:
     module: wb_plic_top
     address: 0x30000000
-    words: 0x10000000
+    words: 0x1000000
+    params:
+      NUM_TARGETS: 2
     ports:
       int_i:
         wire: plic_int_i
@@ -149,9 +151,9 @@ modules:
       PrivilegedPlugin_logic_harts_0_int_m_timer:
         wire: int_m_timer
       PrivilegedPlugin_logic_harts_0_int_m_software:
-        constant: int_m_software
+        wire: int_m_software
       PrivilegedPlugin_logic_harts_0_int_m_external:
-        constant: plic_int_o
+        wire: plic_int_o
       LsuCachelessWishbonePlugin_logic_bridge_down_CYC:
         wire: lsu_cyc
       LsuCachelessWishbonePlugin_logic_bridge_down_STB:

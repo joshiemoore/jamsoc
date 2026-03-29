@@ -28,6 +28,7 @@ $CROSS_COMPILE-gcc -c $CFLAGS firmware/timer.c -o $BUILD_DIR/timer.o
 $CROSS_COMPILE-gcc -c $CFLAGS firmware/lcd.c -o $BUILD_DIR/lcd.o
 $CROSS_COMPILE-gcc -c $CFLAGS firmware/gpio.c -o $BUILD_DIR/gpio.o
 $CROSS_COMPILE-gcc -c $CFLAGS firmware/irq.c -o $BUILD_DIR/irq.o
+$CROSS_COMPILE-gcc -c $CFLAGS firmware/plic.c -o $BUILD_DIR/plic.o
 
 $CROSS_COMPILE-gcc $CFLAGS -T firmware/firmware.ld $BUILD_DIR/*.o -o $BUILD_DIR/firmware.elf
 

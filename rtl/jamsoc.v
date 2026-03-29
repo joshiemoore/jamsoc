@@ -346,7 +346,9 @@ module jamsoc_top (
     .int_m_software (int_m_software)
   );
 
-  wb_plic_top  plic (
+  wb_plic_top #(
+    .NUM_TARGETS (2)
+  ) plic (
     .wb_rst_i (wb_rst),
     .wb_clk_i (wb_clk),
     .wbs_adr_i (plic_adr_i),
@@ -698,8 +700,8 @@ module jamsoc_wb_intercon (
   
 
 
-  wire vex_lsu_req_plic = wbm_vex_lsu_cyc_i && (wbm_vex_lsu_adr_i >= 32'h30000000) && (wbm_vex_lsu_adr_i < 32'h70000000);
-  wire vex_fetch_req_plic = wbm_vex_fetch_cyc_i && (wbm_vex_fetch_adr_i >= 32'h30000000) && (wbm_vex_fetch_adr_i < 32'h70000000);
+  wire vex_lsu_req_plic = wbm_vex_lsu_cyc_i && (wbm_vex_lsu_adr_i >= 32'h30000000) && (wbm_vex_lsu_adr_i < 32'h34000000);
+  wire vex_fetch_req_plic = wbm_vex_fetch_cyc_i && (wbm_vex_fetch_adr_i >= 32'h30000000) && (wbm_vex_fetch_adr_i < 32'h34000000);
   wire [1:0] plic_reqs = { vex_fetch_req_plic, vex_lsu_req_plic };
   reg [1:0] plic_grant = 0;
   reg plic_busy = 0;
