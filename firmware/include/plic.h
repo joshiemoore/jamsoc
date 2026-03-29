@@ -3,6 +3,7 @@
 
 
 #define PLIC_SOURCE_UART 1
+#define PLIC_SOURCE_BTN0 2
 
 void plic_init();
 

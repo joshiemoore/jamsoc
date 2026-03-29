@@ -20,8 +20,8 @@ void plic_init()
   __asm__ ("csrr %0, mhartid" : "=r" (HART_ID));
 
   // init M-mode and S-mode priority thresholds to 0
-  *(volatile uint32_t*)(PLIC_BASE + PLIC_CONTEXT + (HART_ID * PLIC_CONTEXT_STRIDE) + 4) = 0;
-  *(volatile uint32_t*)(PLIC_BASE + PLIC_CONTEXT + ((HART_ID+1) * PLIC_CONTEXT_STRIDE) + 4) = 0;
+  *(volatile uint32_t*)(PLIC_BASE + PLIC_CONTEXT + (HART_ID * PLIC_CONTEXT_STRIDE)) = 0;
+  *(volatile uint32_t*)(PLIC_BASE + PLIC_CONTEXT + ((HART_ID+1) * PLIC_CONTEXT_STRIDE)) = 0;
 
   // init M-mode and S-mode interrupts to disabled
   for (uint32_t i = 0; i <= NUM_SOURCES/32; i++)

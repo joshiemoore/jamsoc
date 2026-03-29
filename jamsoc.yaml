@@ -9,10 +9,12 @@ top_ports:
     clk: 1
     resetn: 1
     uart_rx: 1
+    btn0: 1
   outputs:
     uart_tx: 1
     dbg_fetch_cyc: 1
     dbg_lsu_cyc: 1
+    dbg_int: 1
   inouts:
     gpio: 8
     i2c_scl: 1
@@ -21,6 +23,8 @@ top_ports:
 assignments:
   dbg_fetch_cyc: fetch_cyc
   dbg_lsu_cyc: lsu_cyc
+  dbg_int: plic_int_o
+  plic_int_i[1]: btn0
 
 modules:
 #  cpu0:
@@ -128,7 +132,7 @@ modules:
   plic:
     module: wb_plic_top
     address: 0x30000000
-    words: 0x1000000
+    words: 0x100000
     params:
       NUM_TARGETS: 2
     ports:

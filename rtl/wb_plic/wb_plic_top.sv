@@ -25,14 +25,14 @@ module wb_plic_top #(
   reg [31:0] int_enable [NUM_TARGETS][(NUM_SOURCES+1)/32];
   reg [31:0] priority_threshold [NUM_TARGETS];
   
-  wire [23:0] plic_addr = wbs_adr_i[23:0];
-  wire priority_sel = (plic_addr < 24'h001000);
-  wire pending_sel =  (plic_addr >= 24'h001000 && plic_addr < 24'h001080);
-  wire enable_sel =   (plic_addr >= 24'h002000 && plic_addr < 24'h200000);
-  wire thresh_sel =   (plic_addr >= 24'h200000 && plic_addr < 24'h400000 && plic_addr[11:0] == 12'h000);
-  wire claim_sel =    (plic_addr >= 24'h200000 && plic_addr < 24'h400000 && plic_addr[11:0] == 12'h004);
-
   wire req = wbs_cyc_i && wbs_stb_i;
+  
+  wire [23:0] plic_addr = wbs_adr_i[23:0];
+  wire priority_sel = req && (plic_addr < 24'h001000);
+  wire pending_sel =  req && (plic_addr >= 24'h001000 && plic_addr < 24'h001080);
+  wire enable_sel =   req && (plic_addr >= 24'h002000 && plic_addr < 24'h200000);
+  wire thresh_sel =   req && (plic_addr >= 24'h200000 && plic_addr < 24'h400000 && plic_addr[11:0] == 12'h000);
+  wire claim_sel =    req && (plic_addr >= 24'h200000 && plic_addr < 24'h400000 && plic_addr[11:0] == 12'h004);
  
   wire [23:0] enable_addr = plic_addr - 24'h002000;
   wire [23:0] enable_tidx = enable_addr >> 7;

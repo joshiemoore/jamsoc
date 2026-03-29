@@ -1,3 +1,4 @@
+#include <plic.h>
 #include <uart.h>
 
 
@@ -45,9 +46,19 @@ void handle_interrupt(uint32_t mepc, uint32_t mcause, uint32_t mtval)
     //case INT_SEXTI:
     //  // TODO
     //  break;
-    //case INT_MEXTI:
-    //  // TODO
-    //  break;
+    case INT_MEXTI:
+      uint32_t source = plic_claim();
+      switch (source)
+      {
+        case PLIC_SOURCE_UART:
+          uart_tx(uart_rx());
+          break;
+        case PLIC_SOURCE_BTN0:
+          uart_print("\r\nbtn0 pressed\r\n");
+          break;
+      }
+      plic_complete(source);
+      break;
     //case INT_CNTRF:
     //  // TODO
     //  break;

@@ -46,6 +46,8 @@ void uart_set_baud(uint32_t baud)
   __asm__ volatile ("fence o, o" ::: "memory");
   UART_DIV_LO = (uint8_t)(divisor & 0xFF);
   UART_LINECTL = 0x03;
+  // 1-byte interrupt trigger mode, reset TX/RX FIFOs
+  UART_FIFOCTL = 0x06;
 }
 
 void uart_tx(char c)
@@ -58,6 +60,11 @@ char uart_rx(void)
 {
   while (!(UART_LINEST & UART_LINEST_DR));
   return (char)UART_RXBUF;
+}
+
+void uart_set_interrupts(uint8_t flags)
+{
+  UART_INT_E = flags;
 }
 
 void uart_print(char* s)

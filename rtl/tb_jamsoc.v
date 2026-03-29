@@ -13,7 +13,8 @@ module tb_jamsoc;
 	 .resetn (resetn),
 	 .uart_rx (1'b1),
 	 .uart_tx (uart_tx),
-	 .gpio (gpio)
+	 .gpio (gpio),
+	 .btn0 (1'b1)
   );
   
   always #5 clk = ~clk;
