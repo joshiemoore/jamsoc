@@ -7,7 +7,7 @@
   .global handle_interrupt
 
 _start:
-  li sp, 0x1ff0
+  li sp, 0x7fff0
 
   la t0, trap
   ori t0, t0, 1
