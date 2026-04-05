@@ -15,7 +15,24 @@ int main()
 
   uart_set_interrupts(UART_INT_DR);
 
-  uart_print("ready\r\n");
+  volatile uint32_t* tst_mem = (volatile uint32_t*)0x80000000;
+  for (uint32_t i = 0; i < 32; i++)
+  {
+    tst_mem[i] = i;
+  }
+  for (uint32_t i = 0; i < 32; i++)
+  {
+    uint32_t tmp = tst_mem[i];
+    if (tmp != i)
+    {
+      uart_print("\r\nfail ");
+      uart_print_hex_word(i);
+      uart_print(" ");
+      uart_print_hex_word(tmp);
+    }
+  }
+
+  uart_print("\r\nready\r\n");
   while (1)
   {
   }

@@ -10,13 +10,29 @@ module jamsoc_top (
   input btn0,
 
   output uart_tx,
+  output [13:0] ddr3_addr,
+  output [2:0] ddr3_ba,
+  output [1:0] ddr3_dm,
+  output ddr3_cas_n,
+  output ddr3_ck_p,
+  output ddr3_ck_n,
+  output ddr3_cke,
+  output ddr3_cs_n,
+  output ddr3_odt,
+  output ddr3_ras_n,
+  output ddr3_reset_n,
+  output ddr3_we_n,
   output dbg_fetch_cyc,
   output dbg_lsu_cyc,
   output dbg_int,
+  output dbg_ddr3_calib_complete,
 
   inout [7:0] gpio,
   inout i2c_scl,
-  inout i2c_sda
+  inout i2c_sda,
+  inout [15:0] ddr3_dq,
+  inout [1:0] ddr3_dqs_p,
+  inout [1:0] ddr3_dqs_n
 );
 
 
@@ -40,6 +56,12 @@ module jamsoc_top (
   wire int_m_software;
   wire [30:0] plic_int_i;
   wire plic_int_o;
+  wire clk_ibuf_o;
+  wire clk_bufg_o;
+  wire ddr3_clk;
+  wire ddr3_clk90;
+  wire ddr3_refclk;
+  wire ddr3_calib_complete;
   wire wb_clk;
   wire wb_rst;
   wire [63:0] time_us;
@@ -125,9 +147,19 @@ module jamsoc_top (
   wire plic_cyc_i;
   wire plic_ack_o;
 
+  wire [31:0] ddr3_adr_i;
+  wire [31:0] ddr3_dat_i;
+  wire [31:0] ddr3_dat_o;
+  wire [3:0] ddr3_sel_i;
+  wire ddr3_we_i;
+  wire ddr3_stb_i;
+  wire ddr3_cyc_i;
+  wire ddr3_ack_o;
+
   assign dbg_fetch_cyc = fetch_cyc;
   assign dbg_lsu_cyc = lsu_cyc;
   assign dbg_int = plic_int_o;
+  assign dbg_ddr3_calib_complete = ddr3_calib_complete;
   assign plic_int_i[1] = btn0;
 
   jamsoc_wb_intercon wb_intercon (
@@ -213,7 +245,16 @@ module jamsoc_top (
     .wbs_plic_we_o (plic_we_i),
     .wbs_plic_stb_o (plic_stb_i),
     .wbs_plic_cyc_o (plic_cyc_i),
-    .wbs_plic_ack_i (plic_ack_o)
+    .wbs_plic_ack_i (plic_ack_o),
+
+    .wbs_ddr3_adr_o (ddr3_adr_i),
+    .wbs_ddr3_dat_o (ddr3_dat_i),
+    .wbs_ddr3_dat_i (ddr3_dat_o),
+    .wbs_ddr3_sel_o (ddr3_sel_i),
+    .wbs_ddr3_we_o (ddr3_we_i),
+    .wbs_ddr3_stb_o (ddr3_stb_i),
+    .wbs_ddr3_cyc_o (ddr3_cyc_i),
+    .wbs_ddr3_ack_i (ddr3_ack_o)
   );
 
   wb_vex_lsu #(
@@ -367,6 +408,56 @@ module jamsoc_top (
     .int_o (plic_int_o)
   );
 
+  wb_ddr3  ddr3 (
+    .wb_rst_i (wb_rst),
+    .wb_clk_i (wb_clk),
+    .wbs_adr_i (ddr3_adr_i),
+    .wbs_dat_i (ddr3_dat_i),
+    .wbs_dat_o (ddr3_dat_o),
+    .wbs_sel_i (ddr3_sel_i),
+    .wbs_we_i (ddr3_we_i),
+    .wbs_stb_i (ddr3_stb_i),
+    .wbs_cyc_i (ddr3_cyc_i),
+    .wbs_ack_o (ddr3_ack_o),
+    .ddr3_addr (ddr3_addr),
+    .ddr3_ba (ddr3_ba),
+    .ddr3_dm (ddr3_dm),
+    .ddr3_dq (ddr3_dq),
+    .ddr3_dqs_p (ddr3_dqs_p),
+    .ddr3_dqs_n (ddr3_dqs_n),
+    .ddr3_cas_n (ddr3_cas_n),
+    .ddr3_ck_p (ddr3_ck_p),
+    .ddr3_ck_n (ddr3_ck_n),
+    .ddr3_cke (ddr3_cke),
+    .ddr3_cs_n (ddr3_cs_n),
+    .ddr3_odt (ddr3_odt),
+    .ddr3_ras_n (ddr3_ras_n),
+    .ddr3_reset_n (ddr3_reset_n),
+    .ddr3_we_n (ddr3_we_n),
+    .sys_reset_n (resetn),
+    .ddr3_clk (ddr3_clk),
+    .ddr3_clk90 (ddr3_clk90),
+    .ddr3_ref_clk (ddr3_refclk),
+    .ddr3_calib_complete (ddr3_calib_complete)
+  );
+
+  IBUF  clk_ibuf (
+    .I (clk),
+    .O (clk_ibuf_o)
+  );
+
+  BUFG  clk_bufg (
+    .I (clk_ibuf_o),
+    .O (clk_bufg_o)
+  );
+
+  ddr3_clks  ddr3_clks (
+    .clk_in1 (clk_bufg_o),
+    .ddr3_clk (ddr3_clk),
+    .ddr3_clk90 (ddr3_clk90),
+    .ddr3_refclk (ddr3_refclk)
+  );
+
   VexiiRiscv  cpu0 (
     .clk (wb_clk),
     .reset (wb_rst),
@@ -393,8 +484,9 @@ module jamsoc_top (
   );
 
   wb_syscon  wb_syscon (
-    .clk (clk),
+    .clk (clk_bufg_o),
     .resetn (resetn),
+    .ddr3_calib_complete (ddr3_calib_complete),
     .wb_clk_o (wb_clk),
     .wb_rst_o (wb_rst)
   );
@@ -493,7 +585,16 @@ module jamsoc_wb_intercon (
   output wbs_plic_we_o,
   output wbs_plic_stb_o,
   output wbs_plic_cyc_o,
-  input wbs_plic_ack_i
+  input wbs_plic_ack_i,
+
+  output [31:0] wbs_ddr3_adr_o,
+  output [31:0] wbs_ddr3_dat_o,
+  input [31:0] wbs_ddr3_dat_i,
+  output [3:0] wbs_ddr3_sel_o,
+  output wbs_ddr3_we_o,
+  output wbs_ddr3_stb_o,
+  output wbs_ddr3_cyc_o,
+  input wbs_ddr3_ack_i
 );
 
   localparam [31:0] ADDR_bram0 = 32'h00000000;
@@ -503,6 +604,7 @@ module jamsoc_wb_intercon (
   localparam [31:0] ADDR_aclint_mtimer = 32'h20000000;
   localparam [31:0] ADDR_aclint_mswi = 32'h21000000;
   localparam [31:0] ADDR_plic = 32'h30000000;
+  localparam [31:0] ADDR_ddr3 = 32'h80000000;
 
 
 
@@ -737,6 +839,39 @@ module jamsoc_wb_intercon (
   
 
 
+  wire vex_lsu_req_ddr3 = wbm_vex_lsu_cyc_i && (wbm_vex_lsu_adr_i >= 32'h80000000) && (wbm_vex_lsu_adr_i < 32'h90000000);
+  wire vex_fetch_req_ddr3 = wbm_vex_fetch_cyc_i && (wbm_vex_fetch_adr_i >= 32'h80000000) && (wbm_vex_fetch_adr_i < 32'h90000000);
+  wire [1:0] ddr3_reqs = { vex_fetch_req_ddr3, vex_lsu_req_ddr3 };
+  reg [1:0] ddr3_grant = 0;
+  reg ddr3_busy = 0;
+  always @(posedge wb_clk_i) begin
+    if (wb_rst_i) begin
+      ddr3_grant <= 0;
+      ddr3_busy <= 0;
+    end else begin
+      if (ddr3_busy) begin
+        if (!ddr3_reqs[ddr3_grant]) begin
+          ddr3_busy <= 0;
+          ddr3_grant <= ddr3_grant == 1 ? 0 : (ddr3_grant + 1);
+        end
+      end else begin
+        if (ddr3_reqs[ddr3_grant]) begin
+          ddr3_busy <= 1;
+        end else begin
+          ddr3_grant <= ddr3_grant == 1 ? 0 : (ddr3_grant + 1);
+        end
+      end
+    end
+  end
+  assign wbs_ddr3_adr_o = (ddr3_grant == 0) ? wbm_vex_lsu_adr_i : (ddr3_grant == 1) ? wbm_vex_fetch_adr_i : 0;
+  assign wbs_ddr3_dat_o = (ddr3_grant == 0) ? wbm_vex_lsu_dat_i : (ddr3_grant == 1) ? wbm_vex_fetch_dat_i : 0;
+  assign wbs_ddr3_sel_o = (ddr3_grant == 0) ? wbm_vex_lsu_sel_i : (ddr3_grant == 1) ? wbm_vex_fetch_sel_i : 0;
+  assign wbs_ddr3_we_o = (ddr3_grant == 0) ? wbm_vex_lsu_we_i : (ddr3_grant == 1) ? wbm_vex_fetch_we_i : 0;
+  assign wbs_ddr3_cyc_o = (ddr3_grant == 0 && vex_lsu_req_ddr3) ? wbm_vex_lsu_cyc_i : (ddr3_grant == 1 && vex_fetch_req_ddr3) ? wbm_vex_fetch_cyc_i : 0;
+  assign wbs_ddr3_stb_o = (ddr3_grant == 0 && vex_lsu_req_ddr3) ? wbm_vex_lsu_stb_i : (ddr3_grant == 1 && vex_fetch_req_ddr3) ? wbm_vex_fetch_stb_i : 0;
+  
+
+
 
   assign wbm_vex_lsu_ack_o =
     (bram0_grant == 0 && vex_lsu_req_bram0 && wbs_bram0_ack_i) ||
@@ -745,7 +880,8 @@ module jamsoc_wb_intercon (
     (i2c0_grant == 0 && vex_lsu_req_i2c0 && wbs_i2c0_ack_i) ||
     (aclint_mtimer_grant == 0 && vex_lsu_req_aclint_mtimer && wbs_aclint_mtimer_ack_i) ||
     (aclint_mswi_grant == 0 && vex_lsu_req_aclint_mswi && wbs_aclint_mswi_ack_i) ||
-    (plic_grant == 0 && vex_lsu_req_plic && wbs_plic_ack_i);
+    (plic_grant == 0 && vex_lsu_req_plic && wbs_plic_ack_i) ||
+    (ddr3_grant == 0 && vex_lsu_req_ddr3 && wbs_ddr3_ack_i);
 
   assign wbm_vex_lsu_dat_o =
     (bram0_grant == 0 && vex_lsu_req_bram0) ? wbs_bram0_dat_i :
@@ -755,6 +891,7 @@ module jamsoc_wb_intercon (
     (aclint_mtimer_grant == 0 && vex_lsu_req_aclint_mtimer) ? wbs_aclint_mtimer_dat_i :
     (aclint_mswi_grant == 0 && vex_lsu_req_aclint_mswi) ? wbs_aclint_mswi_dat_i :
     (plic_grant == 0 && vex_lsu_req_plic) ? wbs_plic_dat_i :
+    (ddr3_grant == 0 && vex_lsu_req_ddr3) ? wbs_ddr3_dat_i :
     32'b0;
 
   assign wbm_vex_fetch_ack_o =
@@ -764,7 +901,8 @@ module jamsoc_wb_intercon (
     (i2c0_grant == 1 && vex_fetch_req_i2c0 && wbs_i2c0_ack_i) ||
     (aclint_mtimer_grant == 1 && vex_fetch_req_aclint_mtimer && wbs_aclint_mtimer_ack_i) ||
     (aclint_mswi_grant == 1 && vex_fetch_req_aclint_mswi && wbs_aclint_mswi_ack_i) ||
-    (plic_grant == 1 && vex_fetch_req_plic && wbs_plic_ack_i);
+    (plic_grant == 1 && vex_fetch_req_plic && wbs_plic_ack_i) ||
+    (ddr3_grant == 1 && vex_fetch_req_ddr3 && wbs_ddr3_ack_i);
 
   assign wbm_vex_fetch_dat_o =
     (bram0_grant == 1 && vex_fetch_req_bram0) ? wbs_bram0_dat_i :
@@ -774,6 +912,7 @@ module jamsoc_wb_intercon (
     (aclint_mtimer_grant == 1 && vex_fetch_req_aclint_mtimer) ? wbs_aclint_mtimer_dat_i :
     (aclint_mswi_grant == 1 && vex_fetch_req_aclint_mswi) ? wbs_aclint_mswi_dat_i :
     (plic_grant == 1 && vex_fetch_req_plic) ? wbs_plic_dat_i :
+    (ddr3_grant == 1 && vex_fetch_req_ddr3) ? wbs_ddr3_dat_i :
     32'b0;
 
 

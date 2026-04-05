@@ -17,7 +17,7 @@ module wb_vex_lsu #(
   input wire lsu_stb,
   output wire lsu_ack,
   input wire lsu_we,
-  input [WIDTH_ADDR-2-(WIDTH_DATA/32):0] lsu_adr,
+  input [WIDTH_ADDR-2:0] lsu_adr,
   output [WIDTH_DATA-1:0] lsu_miso,
   input [WIDTH_DATA-1:0] lsu_mosi,
   input [(WIDTH_DATA/8)-1:0] lsu_sel
@@ -54,7 +54,7 @@ module wb_vex_fetch #(
   input wire fetch_stb,
   output wire fetch_ack,
   input wire fetch_we,
-  input [WIDTH_ADDR-3:0] fetch_adr,
+  input [WIDTH_ADDR-2:0] fetch_adr,
   output [WIDTH_DATA-1:0] fetch_miso,
   input [WIDTH_DATA-1:0] fetch_mosi,
   input [(WIDTH_DATA/8)-1:0] fetch_sel
