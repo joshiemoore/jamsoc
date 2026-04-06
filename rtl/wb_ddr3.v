@@ -33,6 +33,10 @@ module wb_ddr3 (
   output wire ddr3_calib_complete
 );
 
+  wire ddr3_stall;
+  wire ddr3_cyc = !ddr3_stall && wbs_cyc_i;
+  wire ddr3_stb = !ddr3_stall && wbs_stb_i;
+
   wire [23:0] ddr3_burst_addr = wbs_adr_i[27:4];
   wire [1:0] ddr3_word_lane = wbs_adr_i[3:2];
 
@@ -52,7 +56,7 @@ module wb_ddr3 (
     (ddr3_word_lane == 2'b01) ? { 64'b0, wbs_dat_i, 32'b0 } :
     (ddr3_word_lane == 2'b10) ? { 32'b0, wbs_dat_i, 64'b0 } :
     (ddr3_word_lane == 2'b11) ? { wbs_dat_i, 96'b0 } :
-    127'b0;
+    128'b0;
   
   assign ddr3_sel_i =
     (ddr3_word_lane == 2'b00) ? { 12'b0, wbs_sel_i } :
@@ -73,15 +77,15 @@ module wb_ddr3 (
     .i_ref_clk (ddr3_ref_clk),
     .i_rst_n (sys_reset_n),
     
-    .i_wb_cyc (wbs_cyc_i),
-    .i_wb_stb (wbs_stb_i),
+    .i_wb_cyc (ddr3_cyc),
+    .i_wb_stb (ddr3_stb),
     .i_wb_we (wbs_we_i),
     .i_wb_addr (ddr3_burst_addr),
     .i_wb_data (ddr3_dat_i),
     .o_wb_data (ddr3_dat_o),
     .i_wb_sel (ddr3_sel_i),
     .o_wb_ack (wbs_ack_o),
-    // .o_wb_stall (),
+    .o_wb_stall (ddr3_stall),
   
     .o_ddr3_clk_p (ddr3_ck_p),
     .o_ddr3_clk_n (ddr3_ck_n),
