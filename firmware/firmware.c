@@ -20,20 +20,24 @@ int main()
   uart_print("\r\nrunning memory test...");
 
   volatile uint32_t* tst_mem = (volatile uint32_t*)0x80000000;
-  for (uint32_t i = 0; i < 0x40000; i++)
+  uint32_t tmp;
+  for (uint32_t i = 0; i < 0x40000; i += 16)
   {
-    tst_mem[i] = i ^ 0xAAAAAAAA;
-  }
-  for (uint32_t i = 0; i < 0x40000; i++)
-  {
-    uint32_t tmp = tst_mem[i] ^ 0xAAAAAAAA;
-    if (tmp != i)
+    for (uint32_t j = 0; j < 16; j++)
     {
-      uart_print("\r\n  fail ");
-      uart_print_hex_word(i);
-      uart_print(" ");
-      uart_print_hex_word(tmp);
-      while(1);
+      tst_mem[i+j] = (i+j) ^ 0xAAAAAAAA;
+    }
+    for (uint32_t j = 0; j < 16; j++)
+    {
+      tmp = tst_mem[i+j] ^ 0xAAAAAAAA;
+      if (tmp != (i+j))
+      {
+        uart_print("\r\n  fail ");
+        uart_print_hex_word(i);
+        uart_print(" ");
+        uart_print_hex_word(tmp);
+        while(1);
+      }
     }
   }
 

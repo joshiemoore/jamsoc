@@ -3,12 +3,12 @@ module wb_ddr3 (
   input wire wb_rst_i,
   input wire [31:0] wbs_adr_i,
   input wire [31:0] wbs_dat_i,
-  output wire [31:0] wbs_dat_o,
+  output reg [31:0] wbs_dat_o,
   input wire [3:0] wbs_sel_i,
   input wire wbs_we_i,
   input wire wbs_cyc_i,
   input wire wbs_stb_i,
-  output wire wbs_ack_o,
+  output reg wbs_ack_o,
 
   output wire [13:0] ddr3_addr,
   output wire [2:0] ddr3_ba,
@@ -33,36 +33,75 @@ module wb_ddr3 (
   output wire ddr3_calib_complete
 );
 
+  wire ddr3_cyc;
+  wire ddr3_stb;
   wire ddr3_stall;
-  wire ddr3_cyc = !ddr3_stall && wbs_cyc_i;
-  wire ddr3_stb = !ddr3_stall && wbs_stb_i;
-
-  wire [23:0] ddr3_burst_addr = wbs_adr_i[27:4];
-  wire [1:0] ddr3_word_lane = wbs_adr_i[3:2];
 
   wire [127:0] ddr3_dat_i;
   wire [15:0] ddr3_sel_i;
   wire [127:0] ddr3_dat_o;
+  wire ddr3_ack;
+  wire [23:0] ddr3_burst_addr;
+  wire [1:0] ddr3_word_lane;
 
-  assign wbs_dat_o =
-    (ddr3_word_lane == 2'b00) ? ddr3_dat_o[31:0]   :
-    (ddr3_word_lane == 2'b01) ? ddr3_dat_o[63:32]  :
-    (ddr3_word_lane == 2'b10) ? ddr3_dat_o[95:64]  :
-    (ddr3_word_lane == 2'b11) ? ddr3_dat_o[127:96] :
-    32'b0;
+  reg req_valid;
+  reg [31:0] req_data;
+  reg [31:0] req_addr;
+  reg [3:0] req_sel;
+  reg req_we;
+  reg [1:0] req_read_lane;
+
+  assign ddr3_cyc = req_valid;
+  assign ddr3_stb = req_valid;
+  assign ddr3_burst_addr = req_addr[27:4];
+  assign ddr3_word_lane  = req_addr[3:2];
+
+  always @(posedge wb_clk_i) begin
+    if (wb_rst_i) begin
+      req_valid <= 1'b0;
+      req_read_lane <= 2'b0;
+      wbs_ack_o <= 1'b0;
+      wbs_dat_o <= 32'b0;
+    end else begin
+      if (!req_valid && !ddr3_stall && wbs_cyc_i && wbs_stb_i) begin
+        req_valid  <= 1'b1;
+        req_data   <= wbs_dat_i;
+        req_addr   <= wbs_adr_i;
+        req_sel    <= wbs_sel_i;
+        req_we     <= wbs_we_i;
+        if (!wbs_we_i) begin
+          req_read_lane <= wbs_adr_i[3:2];
+        end
+      end
+      
+      if (req_valid && ddr3_ack) begin
+        req_valid <= 1'b0;
+        wbs_ack_o <= 1'b1;
+        
+        case (req_read_lane)
+          2'b00: wbs_dat_o <= ddr3_dat_o[31:0];
+          2'b01: wbs_dat_o <= ddr3_dat_o[63:32];
+          2'b10: wbs_dat_o <= ddr3_dat_o[95:64];
+          2'b11: wbs_dat_o <= ddr3_dat_o[127:96];
+        endcase
+      end else begin
+        wbs_ack_o <= 1'b0;
+      end
+    end
+  end
 
   assign ddr3_dat_i =
-    (ddr3_word_lane == 2'b00) ? { 96'b0, wbs_dat_i } :
-    (ddr3_word_lane == 2'b01) ? { 64'b0, wbs_dat_i, 32'b0 } :
-    (ddr3_word_lane == 2'b10) ? { 32'b0, wbs_dat_i, 64'b0 } :
-    (ddr3_word_lane == 2'b11) ? { wbs_dat_i, 96'b0 } :
+    (ddr3_word_lane == 2'b00) ? { 96'b0, req_data } :
+    (ddr3_word_lane == 2'b01) ? { 64'b0, req_data, 32'b0 } :
+    (ddr3_word_lane == 2'b10) ? { 32'b0, req_data, 64'b0 } :
+    (ddr3_word_lane == 2'b11) ? { req_data, 96'b0 } :
     128'b0;
   
   assign ddr3_sel_i =
-    (ddr3_word_lane == 2'b00) ? { 12'b0, wbs_sel_i } :
-    (ddr3_word_lane == 2'b01) ? { 8'b0, wbs_sel_i, 4'b0 } :
-    (ddr3_word_lane == 2'b10) ? { 4'b0, wbs_sel_i, 8'b0 } :
-    (ddr3_word_lane == 2'b11) ? { wbs_sel_i, 12'b0 } :
+    (ddr3_word_lane == 2'b00) ? { 12'b0, req_sel } :
+    (ddr3_word_lane == 2'b01) ? { 8'b0, req_sel, 4'b0 } :
+    (ddr3_word_lane == 2'b10) ? { 4'b0, req_sel, 8'b0 } :
+    (ddr3_word_lane == 2'b11) ? { req_sel, 12'b0 } :
     16'b0;
 
   ddr3_top #(
@@ -79,12 +118,12 @@ module wb_ddr3 (
     
     .i_wb_cyc (ddr3_cyc),
     .i_wb_stb (ddr3_stb),
-    .i_wb_we (wbs_we_i),
+    .i_wb_we (req_we),
     .i_wb_addr (ddr3_burst_addr),
     .i_wb_data (ddr3_dat_i),
     .o_wb_data (ddr3_dat_o),
     .i_wb_sel (ddr3_sel_i),
-    .o_wb_ack (wbs_ack_o),
+    .o_wb_ack (ddr3_ack),
     .o_wb_stall (ddr3_stall),
   
     .o_ddr3_clk_p (ddr3_ck_p),
