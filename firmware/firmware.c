@@ -15,8 +15,6 @@ int main()
 
   uart_set_interrupts(UART_INT_DR);
 
-  delay_us(500000);
-
   uart_print("\r\nrunning memory test...");
 
   volatile uint32_t* tst_mem = (volatile uint32_t*)0x80000000;
